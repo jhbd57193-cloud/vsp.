@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ВСП: CLOUD NETWORK v8.0</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Exo+2:wght@300;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon: #00f2ff; --bg: #050a14; --gold: #ffcc00; --glass: rgba(10, 25, 47, 0.95); --danger: #ff0055; }
+        body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: #fff; margin: 0; display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: #000; border-right: 1px solid var(--neon); height: 100vh; position: fixed; box-shadow: 10px 0 30px rgba(0, 242, 255, 0.1); }
+        .logo-area { padding: 30px; border-bottom: 1px solid rgba(0,242,255,0.2); text-align: center; }
+        .logo-area h2 { font-family: 'Orbitron'; color: var(--neon); margin: 0; text-shadow: 0 0 10px var(--neon); }
+        
+        .nav-item { padding: 15px 25px; cursor: pointer; color: #888; font-family: 'Orbitron'; font-size: 11px; transition: 0.3s; }
+        .nav-item:hover, .nav-item.active { color: var(--neon); background: rgba(0,242,255,0.05); border-left: 3px solid var(--neon); }
+
+        /* Main */
+        .content { margin-left: 260px; padding: 40px; width: 100%; }
+        .panel { background: var(--glass); border: 1px solid rgba(0,242,255,0.2); padding: 25px; border-radius: 12px; margin-bottom: 25px; backdrop-filter: blur(10px); }
+        
+        /* Buttons */
+        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 12px 20px; cursor: pointer; font-family: 'Orbitron'; font-size: 10px; border-radius: 5px; transition: 0.3s; margin-right: 10px; }
+        .btn:hover { background: var(--neon); color: #000; box-shadow: 0 0 20px var(--neon); }
+        .btn-del { border-color: var(--danger); color: var(--danger); padding: 5px 10px; }
+        .btn-del:hover { background: var(--danger); color: white; box-shadow: 0 0 15px var(--danger); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { text-align: left; padding: 15px; color: var(--gold); border-bottom: 1px solid var(--neon); font-family: 'Orbitron'; }
+        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        /* Modals */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
+        .modal-box { background: #0a1128; border: 1px solid var(--neon); padding: 40px; width: 380px; border-radius: 15px; box-shadow: 0 0 50px rgba(0,242,255,0.2); }
+        
+        input, select, textarea { width: 100%; background: rgba(0,0,0,0.5); border: 1px solid #333; color: #fff; padding: 12px; margin: 10px 0; border-radius: 5px; }
+        input:focus { border-color: var(--neon); outline: none; }
+
+        /* Auth Screen */
+        #authScreen { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; align-items:center; justify-content:center; }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen">
+        <div class="modal-box" style="text-align:center;">
+            <h2 style="font-family:'Orbitron'; color:var(--neon);">VSP // TERMINAL</h2>
+            <p style="font-size: 10px; color: var(--gold); letter-spacing: 2px;">SECURE CONNECTION REQUIRED</p>
+            <input id="loginField" placeholder="ЛОГІН">
+            <input id="passField" type="password" placeholder="ПАРОЛЬ">
+            <button class="btn" style="width:100%; margin-top: 10px;" onclick="core.handleLogin()">УВІЙТИ</button>
+            <p style="font-size: 11px; margin-top: 20px; cursor: pointer; opacity: 0.6;" onclick="core.toggleReg()">ЗАРЕЄСТРУВАТИ НОВИЙ ЖЕТОН</p>
+        </div>
+    </div>
+
+    <div class="sidebar">
+        <div class="logo-area">
+            <h2>VSP SYSTEM</h2>
+            <div id="uBadge" style="font-size: 9px; margin-top: 10px; color: var(--gold);"></div>
+        </div>
+        <div class="nav-item active" onclick="core.nav('home', this)">ГОЛОВНА ПАНЕЛЬ</div>
+        <div class="nav-item" onclick="core.nav('soldiers', this)">ОСОБОВИЙ СКЛАД</div>
+        <div class="nav-item" onclick="core.nav('cars', this)">АВТОТРАНСПОРТ</div>
+        <div class="nav-item" onclick="core.nav('reports', this)">ЖУРНАЛ ЗВІТІВ</div>
+        <div id="adminTab" class="nav-item" style="display:none; color:var(--gold);" onclick="core.nav('admin', this)">КЕРУВАННЯ БАЗОЮ</div>
+        <div class="nav-item" style="color:var(--danger); margin-top: 40px;" onclick="location.reload()">ВИЙТИ (OFFLINE)</div>
+    </div>
+
+    <div class="content">
+        <div id="s-home" class="section">
+            <div class="panel" style="border-left: 5px solid var(--neon);">
+                <h1 style="font-family:'Orbitron'; color:var(--neon); margin:0;">ЦЕНТРАЛЬНИЙ МОНІТОРИНГ</h1>
+                <p>Всі дані синхронізуються у хмарі в реальному часі.</p>
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="core.openM('m-sol')">+ ДОДАТИ БІЙЦЯ</button>
+                    <button class="btn" onclick="core.openM('m-car')">🚔 РЕЄСТР АВТО</button>
+                    <button class="btn" onclick="core.openM('m-rep')">📝 НОВИЙ ЗВІТ</button>
+                </div>
+            </div>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+                <div class="panel" style="text-align:center;"><h4>БІЙЦІВ</h4><span id="st1" style="font-size:30px; color:var(--neon);">0</span></div>
+                <div class="panel" style="text-align:center;"><h4>ТЕХНІКИ</h4><span id="st2" style="font-size:30px; color:var(--neon);">0</span></div>
+                <div class="panel" style="text-align:center;"><h4>ЗВІТІВ</h4><span id="st3" style="font-size:30px; color:var(--neon);">0</span></div>
+            </div>
+        </div>
+
+        <div id="s-soldiers" class="section" style="display:none;"><div class="panel"><h2>ОСОБОВИЙ СКЛАД</h2><table id="t-sol"><thead><tr><th>ПІБ</th><th>Звання</th><th>Посада</th><th>Дія</th></tr></thead><tbody></tbody></table></div></div>
+        <div id="s-cars" class="section" style="display:none;"><div class="panel"><h2>РЕЄСТР ТРАНСПОРТУ</h2><table id="t-car"><thead><tr><th>Номер</th><th>Марка</th><th>Статус</th><th>Дія</th></tr></thead><tbody></tbody></table></div></div>
+        <div id="s-reports" class="section" style="display:none;"><div class="panel"><h2>ЖУРНАЛ ЗВІТІВ</h2><table id="t-rep"><thead><tr><th>Час</th><th>Автор</th><th>Текст</th><th>Дія</th></tr></thead><tbody></tbody></table></div></div>
+        <div id="s-admin" class="section" style="display:none;"><div class="panel"><h2>КЕРУВАННЯ МЕРЕЖЕЮ</h2><table id="t-users"><thead><tr><th>Логін</th><th>Роль</th><th>Дія</th></tr></thead><tbody></tbody></table></div></div>
+    </div>
+
+    <div id="m-sol" class="modal"><div class="modal-box"><h3>НОВИЙ БОЄЦЬ</h3><input id="is1" placeholder="ПІБ"><input id="is2" placeholder="Звання"><input id="is3" placeholder="Посада"><button class="btn" onclick="core.save('soldiers')">ЗБЕРЕГТИ</button><button class="btn" onclick="core.closeM()">X</button></div></div>
+    <div id="m-car" class="modal"><div class="modal-box"><h3>РЕЄСТРАЦІЯ ТЕХНІКИ</h3><input id="ic1" placeholder="Номер"><input id="ic2" placeholder="Марка/Модель"><select id="ic3"><option>В ПАРКУ</option><option>ВИЇЗД</option><option>РЕМОНТ</option></select><button class="btn" onclick="core.save('cars')">ЗАРЕЄСТРУВАТИ</button><button class="btn" onclick="core.closeM()">X</button></div></div>
+    <div id="m-rep" class="modal"><div class="modal-box"><h3>ПОДАТИ ЗВІТ</h3><textarea id="ir1" placeholder="Опис події..."></textarea><button class="btn" onclick="core.save('reports')">ВІДПРАВИТИ</button><button class="btn" onclick="core.closeM()">X</button></div></div>
+
+    <script>
+        // ВСТАВ СВОЄ ПОСИЛАННЯ З FIREBASE ТУТ:
+        const CLOUD_URL = "https://your-project-id.firebaseio.com/"; 
+
+        const core = {
+            user: null, regMode: false,
+            async request(path, method="GET", body=null) {
+                const opt = { method, body: body ? JSON.stringify(body) : null };
+                const r = await fetch(`${CLOUD_URL}${path}.json`, opt);
+                return r.json();
+            },
+            toggleReg() { this.regMode = !this.regMode; document.querySelector('#authScreen h2').innerText = this.regMode ? "VSP // REGISTER" : "VSP // TERMINAL"; },
+            
+            async handleLogin() {
+                const u = document.getElementById('loginField').value, p = document.getElementById('passField').value;
+                if(!u || !p) return alert("Заповніть поля!");
+
+                if(this.regMode) {
+                    // Якщо реєструється власник, ставимо роль Super та пароль 5588 автоматично
+                    const role = (u === 'owner') ? 'super' : 'user';
+                    const finalPass = (u === 'owner') ? '5588' : p;
+                    await this.request(`users/${u}`, "PUT", {u, p: finalPass, role});
+                    alert("Реєстрація успішна! Пароль власника встановлено на 5588.");
+                    this.toggleReg();
+                } else {
+                    const users = await this.request('users') || {};
+                    const found = users[u];
+                    if(found && found.p === p) {
+                        this.user = found;
+                        document.getElementById('authScreen').style.display='none';
+                        this.init();
+                    } else alert("Доступ заборонено!");
+                }
+            },
+
+            init() {
+                document.getElementById('uBadge').innerText = `${this.user.u} [${this.user.role.toUpperCase()}]`;
+                if(this.user.role === 'super') document.getElementById('adminTab').style.display='block';
+                setInterval(() => this.sync(), 4000); 
+                this.sync();
+            },
+
+            nav(id, el) {
+                document.querySelectorAll('.section').forEach(s => s.style.display='none');
+                document.getElementById('s-'+id).style.display='block';
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                el.classList.add('active');
+            },
+
+            openM(id) { document.getElementById(id).style.display='flex'; },
+            closeM() { document.querySelectorAll('.modal').forEach(m => m.style.display='none'); },
+
+            async save(type) {
+                let data = {};
+                if(type==='soldiers') data = {a:document.getElementById('is1').value, b:document.getElementById('is2').value, c:document.getElementById('is3').value};
+                if(type==='cars') data = {a:document.getElementById('ic1').value, b:document.getElementById('ic2').value, c:document.getElementById('ic3').value};
+                if(type==='reports') data = {a:new Date().toLocaleTimeString(), b:this.user.u, c:document.getElementById('ir1').value};
+                
+                await this.request(`${type}/${Date.now()}`, "PUT", data);
+                this.closeM(); this.sync();
+            },
+
+            async del(type, key) {
+                if(this.user.role === 'user' && type !== 'reports') return alert("Немає прав!");
+                await this.request(`${type}/${key}`, "DELETE");
+                this.sync();
+            },
+
+            async sync() {
+                const s = await this.request('soldiers') || {};
+                const c = await this.request('cars') || {};
+                const r = await this.request('reports') || {};
+
+                document.getElementById('st1').innerText = Object.keys(s).length;
+                document.getElementById('st2').innerText = Object.keys(c).length;
+                document.getElementById('st3').innerText = Object.keys(r).length;
+
+                const isAdmin = this.user.role !== 'user';
+                
+                let hS=''; Object.keys(s).forEach(k=> hS+=`<tr><td>${s[k].a}</td><td>${s[k].b}</td><td>${s[k].c}</td><td>${isAdmin?`<button class="btn btn-del" onclick="core.del('soldiers','${k}')">X</button>`:'-'}</td></tr>`);
+                document.getElementById('t-sol').querySelector('tbody').innerHTML = hS;
+
+                let hC=''; Object.keys(c).forEach(k=> hC+=`<tr><td>${c[k].a}</td><td>${c[k].b}</td><td>${c[k].c}</td><td>${isAdmin?`<button class="btn btn-del" onclick="core.del('cars','${k}')">X</button>`:'-'}</td></tr>`);
+                document.getElementById('t-car').querySelector('tbody').innerHTML = hC;
+
+                let hR=''; Object.keys(r).forEach(k=> hR+=`<tr><td>${r[k].a}</td><td>${r[k].b}</td><td>${r[k].c}</td><td>${isAdmin?`<button class="btn btn-del" onclick="core.del('reports','${k}')">X</button>`:'-'}</td></tr>`);
+                document.getElementById('t-rep').querySelector('tbody').innerHTML = hR;
+            }
+        };
+    </script>
+</body>
+</html>
